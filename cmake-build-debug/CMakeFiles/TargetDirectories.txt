@@ -1,0 +1,3 @@
+C:/Users/Ashwi/Documents/github/OSThree/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+C:/Users/Ashwi/Documents/github/OSThree/cmake-build-debug/CMakeFiles/OSThree.dir
+C:/Users/Ashwi/Documents/github/OSThree/cmake-build-debug/CMakeFiles/edit_cache.dir
