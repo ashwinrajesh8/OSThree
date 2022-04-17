@@ -6,9 +6,10 @@
 #include <fstream>
 #include<bits/stdc++.h> // for Graph class stuff
 #include<pthread.h>
+#include<unistd.h>
 
 
-/// Imported Graph Class starts here
+/// Imported Graph Class starts here - source: https://www.geeksforgeeks.org/detect-cycle-in-a-graph/
 class Graph
 {
     int V;    // No. of vertices
@@ -85,12 +86,49 @@ struct player {
     std::string name;
     int numNumbers;
     std::vector<int> numbers;
+    int thread_id;
 };
 /// end of player struct
 
 /// Global vars
 std::vector<player> players;
+
+pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
+pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 /// end of Global var declarations
+
+/// Function sending broadcast to start threads
+void startSignal(){
+    pthread_cond_broadcast(&cond);
+    printf("\nStart signal sent, delete me\n");
+}
+/// End of start signal
+
+/// Request Function
+void Request(int playerID, int resourceID){     // takes in person making request, and resource to be obtained
+
+}
+/// End of Request Function
+
+/// Release Function
+void Release(int playerID, int resourceID){     // takes in person releasing, and the list of resources they are releasing
+
+}
+/// End of Release Function
+
+/// Thread function
+void *playerThread(void* z){
+    const int threadID = *((int*) z);
+
+    pthread_mutex_lock(&lock);          // lock thread until start signal
+    std::cout << "Thread " << threadID << " waiting for broadcast, delete me" << std::endl;
+    pthread_cond_wait(&cond, &lock);    // wait for start signal
+    std::cout << "Thread " << threadID << " recieved start, delete me" << std::endl;
+    pthread_mutex_unlock(&lock);        // unlock thread after signal broadcast
+
+    return NULL;
+}
+/// End of thread
 
 int main(int argc, char **argv) {
     std::cout << "\nTest cmake project execution." << std::endl << std::endl;
@@ -103,10 +141,15 @@ int main(int argc, char **argv) {
     std::cout << "Name of Input File: " << argv[1] << std::endl << std::endl;     // "when program starts, you should print out name of file"
     std::ifstream input_file;
     input_file.open(argv[1]);
-    getline(input_file, N_string, ' ');
+
+    std::string first_line;
+    getline(input_file, first_line);
+    std::istringstream  first_ss(first_line);
+    getline(first_ss, N_string, ' ');
     N_in = std::stoi(N_string);
-    getline(input_file, k_string, ' ');
+    getline(first_ss, k_string, '\n');
     k_in = std::stoi(k_string);
+
     std::cout << "N read: " << N_in << " k read: " << k_in << std::endl << std::endl;
     std::string curr_line;
     for(int i = 0; i < N_in; i++){
@@ -131,10 +174,25 @@ int main(int argc, char **argv) {
         }
         std::cout << std::endl;
     }
-    std::cout << players[0].name << std::endl;
     std::cout << std::endl;
 
+    // Initialize graph to N vertices
+    Graph graphy(N_in);
     /// End of File IO
+
+    /// Create a thread for each person
+    pthread_t tid[N_in];
+    for(int j = 0; j < N_in; j++){
+        players[j].thread_id = j;       // assign player thread id (even though its same as player id)
+        pthread_create(&tid[j], NULL, playerThread, (void *) &players[j].thread_id);    // create thread
+    }
+    sleep(2);   // wait to give time for threads to finish necessary pre-processing
+    /// End of thread creation
+
+    /// Signal start
+    startSignal();
+    /// End of start signal
+
 
     Graph g(4);
     g.addEdge(0, 1);
@@ -144,9 +202,13 @@ int main(int argc, char **argv) {
     g.addEdge(2, 3);
     g.addEdge(3, 3);
 
-    if(g.isCyclic()){std::cout << "Graph contains cycle";}
-    else {std::cout << "Graph doesn't contain cycle";}
+    if(g.isCyclic()){std::cout << "Graph contains cycle\n\n";}
+    else {std::cout << "Graph doesn't contain cycle\n\n";}
 
+
+    /// Thread cleanup
+    pthread_exit(NULL);
+    /// end of thread exit
 
     std::cout << std::endl;
     return 0;
