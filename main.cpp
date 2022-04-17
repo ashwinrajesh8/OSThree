@@ -8,6 +8,10 @@
 #include<pthread.h>
 #include<unistd.h>
 
+/*
+ * Ashwin Rajesh, Operating Systems, Program 1
+*/
+
 
 /// Imported Graph Class starts here - source: https://www.geeksforgeeks.org/detect-cycle-in-a-graph/
 class Graph
@@ -19,7 +23,21 @@ public:
     Graph(int V);   // Constructor
     void addEdge(int v, int w);   // to add an edge to graph
     bool isCyclic();    // returns true if there is a cycle in this graph
+    Graph(); // ADDED new constructor
+    void addAttributes(int V);
 };
+
+/// add declaration to enable global variable
+Graph::Graph(){
+
+}
+/// end new initialization
+/// Enable object update
+void Graph::addAttributes(int V){
+    this->V = V;
+    adj = new std::list<int>[V];
+}
+/// end object update
 
 Graph::Graph(int V)
 {
@@ -92,6 +110,7 @@ struct player {
 
 /// Global vars
 std::vector<player> players;
+Graph graphy;
 
 pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
 pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
@@ -105,20 +124,25 @@ void startSignal(){
 /// End of start signal
 
 /// Request Function
-void Request(int playerID, int resourceID){     // takes in person making request, and resource to be obtained
+bool Request(int playerID, int resourceID, std::vector<int> &thread_resources){     // takes in person making request, and resource to be obtained
+    bool requestStatus = true;
 
+    return requestStatus;
 }
 /// End of Request Function
 
 /// Release Function
-void Release(int playerID, int resourceID){     // takes in person releasing, and the list of resources they are releasing
-
+void Release(int playerID, int resourceID, std::vector<int> &thread_resources){     // takes in person releasing, and the list of resources they are releasing
+    // make resource positive first
 }
 /// End of Release Function
 
 /// Thread function
 void *playerThread(void* z){
     const int threadID = *((int*) z);
+    std::vector<int> thread_resources;
+    int totalResources = players[threadID].numbers.size();
+    int itemVectorPosition = 0;
 
     pthread_mutex_lock(&lock);          // lock thread until start signal
     std::cout << "Thread " << threadID << " waiting for broadcast, delete me" << std::endl;
@@ -126,6 +150,41 @@ void *playerThread(void* z){
     std::cout << "Thread " << threadID << " recieved start, delete me" << std::endl;
     pthread_mutex_unlock(&lock);        // unlock thread after signal broadcast
 
+    while(totalResources > 0){
+        int lockStatus = pthread_mutex_lock(&lock);
+        while(lockStatus != 0){
+            lockStatus = pthread_mutex_lock(&lock);
+        }
+
+        // Determine whether next item is requesting or releasing a resource
+        if(players[threadID].numbers[itemVectorPosition] > 0){  // REQUEST
+            bool granted = Request(threadID, itemVectorPosition, thread_resources);
+            if(granted == true){
+                sleep(1+((std::rand()%100)/100));
+            }
+            else{
+                sleep((std::rand()%100)/100);
+            }
+        }
+        else{       // RELEASE
+            Release(threadID, itemVectorPosition, thread_resources);
+        }
+        itemVectorPosition++;
+
+        totalResources -= 1;
+        std::cout << "Thread " << threadID << " total: " << totalResources << std::endl;
+
+        pthread_mutex_unlock(&lock);
+        sleep(1);   /// EVALUATE NEED FOR SLEEP!!!!
+    }
+
+
+    sleep(1+((std::rand()%100)/100));           // sleep for (1+q/100) seconds (q is a random number between 0, 99)
+
+    for(int k = 0; k < thread_resources.size(); k++){       // release all the resources that it is still holding
+        Release(threadID, thread_resources[k], thread_resources);
+    }
+    // exit
     return NULL;
 }
 /// End of thread
@@ -177,7 +236,7 @@ int main(int argc, char **argv) {
     std::cout << std::endl;
 
     // Initialize graph to N vertices
-    Graph graphy(N_in);
+    graphy.addAttributes(N_in);
     /// End of File IO
 
     /// Create a thread for each person
