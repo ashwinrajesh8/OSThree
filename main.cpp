@@ -2,10 +2,8 @@
 // Created by Ashwi on 4/12/2022.
 //
 #include <iostream>
-#include <sstream>
-#include <fstream>
 #include<bits/stdc++.h> // for Graph class stuff
-#include<pthread.h>
+#include<pthread.h>     // for Thread stuff
 #include<unistd.h>
 
 /*
@@ -141,11 +139,11 @@ void Release(int playerID, int resourceID, std::vector<int> &thread_resources){ 
 void *playerThread(void* z){
     const int threadID = *((int*) z);
     std::vector<int> thread_resources;
-    int totalResources = players[threadID].numbers.size();
+    int totalResources = players[threadID].numNumbers;
     int itemVectorPosition = 0;
 
     pthread_mutex_lock(&lock);          // lock thread until start signal
-    std::cout << "Thread " << threadID << " waiting for broadcast, delete me" << std::endl;
+    std::cout << "Thread " << threadID << " waiting for broadcast, delete me " << players[threadID].name << " " << players[threadID].numNumbers << std::endl;
     pthread_cond_wait(&cond, &lock);    // wait for start signal
     std::cout << "Thread " << threadID << " recieved start, delete me" << std::endl;
     pthread_mutex_unlock(&lock);        // unlock thread after signal broadcast
@@ -159,6 +157,7 @@ void *playerThread(void* z){
         // Determine whether next item is requesting or releasing a resource
         if(players[threadID].numbers[itemVectorPosition] > 0){  // REQUEST
             bool granted = Request(threadID, itemVectorPosition, thread_resources);
+            pthread_mutex_unlock(&lock);
             if(granted == true){
                 sleep(1+((std::rand()%100)/100));
             }
@@ -168,14 +167,15 @@ void *playerThread(void* z){
         }
         else{       // RELEASE
             Release(threadID, itemVectorPosition, thread_resources);
+            pthread_mutex_unlock(&lock);
         }
         itemVectorPosition++;
 
         totalResources -= 1;
         std::cout << "Thread " << threadID << " total: " << totalResources << std::endl;
 
-        pthread_mutex_unlock(&lock);
-        sleep(1);   /// EVALUATE NEED FOR SLEEP!!!!
+//        pthread_mutex_unlock(&lock);
+//        sleep(1);   /// EVALUATE NEED FOR SLEEP!!!! if i remove, then same player for each turn until done.
     }
 
 
@@ -184,6 +184,7 @@ void *playerThread(void* z){
     for(int k = 0; k < thread_resources.size(); k++){       // release all the resources that it is still holding
         Release(threadID, thread_resources[k], thread_resources);
     }
+    std::cout << "Thread " << threadID << " released everything, delete me"<< std::endl;
     // exit
     return NULL;
 }

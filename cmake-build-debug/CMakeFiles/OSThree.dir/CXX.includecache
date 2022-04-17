@@ -9,10 +9,6 @@
 C:/Users/Ashwi/Documents/github/OSThree/main.cpp
 iostream
 -
-sstream
--
-fstream
--
 bits/stdc++.h
 -
 pthread.h
