@@ -11,6 +11,14 @@
 */
 
 
+/*
+ * Problems:
+ * Directed graph may have no cycles, since we just add edges
+ * We don't allocate resources to players, only players to resources
+ * No join thread
+ * No claim edges, we just test on new graph
+ * */
+
 /// Imported Graph Class starts here - source: https://www.geeksforgeeks.org/detect-cycle-in-a-graph/
 class Graph
 {
@@ -109,6 +117,9 @@ struct player {
 /// Global vars
 std::vector<player> players;
 Graph graphy;
+int graphSize = 100; // assuming individual k does not exceed 100
+std::vector<std::vector<int>> thread_resources;
+std::vector<int> resourcesInUse;
 
 pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
 pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
@@ -122,23 +133,70 @@ void startSignal(){
 /// End of start signal
 
 /// Request Function
-bool Request(int playerID, int resourceID, std::vector<int> &thread_resources){     // takes in person making request, and resource to be obtained
+bool Request(int playerID, int resourceID){     // takes in person making request, and resource to be obtained
     bool requestStatus = true;
+    int playerNode = graphSize+playerID-1;
+    Graph tempy = graphy;
+
+    tempy.addEdge(playerNode, players[playerID].numbers[resourceID]);
+//    tempy.addEdge(players[playerID].numbers[resourceID], playerNode);
+    if(!tempy.isCyclic()){
+        /// try check thre resource vector check if assigned
+        bool is_assigned = false;
+        for(int i = 0; i < resourcesInUse.size(); i++){
+            if(resourcesInUse[i] == players[playerID].numbers[resourceID]){
+                is_assigned = true;
+            }
+        }
+        if(is_assigned == true){
+//            Graph tempy_two = graphy;
+//            tempy_two.addEdge(playerNode, players[playerID].numbers[resourceID]);
+//            if(!tempy_two.isCyclic()){
+//                std::cout << "Player " << players[playerID].name << " requested resource " << players[playerID].numbers[resourceID] << ": assigned" << std::endl;
+//                graphy.addEdge(playerNode, players[playerID].numbers[resourceID]);
+//            }
+//            else{
+//                std::cout << "Player " << players[playerID].name << " requested resource " << players[playerID].numbers[resourceID] << ": rejected" << std::endl;
+//            }
+            std::cout << "Player " << players[playerID].name << " requested resource " << players[playerID].numbers[resourceID] << ": rejected" << std::endl;
+            requestStatus = false;
+        }
+        else{
+            resourcesInUse.push_back(players[playerID].numbers[resourceID]);
+            graphy.addEdge(playerNode, players[playerID].numbers[resourceID]);
+            std::cout << "Player " << players[playerID].name << " requested resource " << players[playerID].numbers[resourceID] << ": accepted" << std::endl;
+            requestStatus = true;
+        }
+        ///graphy.addEdge(playerNode, players[playerID].numbers[resourceID]);
+//        graphy.addEdge(players[playerID].numbers[resourceID], playerNode);
+///        std::cout << "Player " << players[playerID].name << " requested resource " << players[playerID].numbers[resourceID] << ": accepted" << std::endl;
+///        requestStatus = true;
+    }
+    else{
+        std::cout << "Player " << players[playerID].name << " requested resource " << players[playerID].numbers[resourceID] << ": denied" << std::endl;
+        requestStatus = false;
+    }
 
     return requestStatus;
 }
 /// End of Request Function
 
 /// Release Function
-void Release(int playerID, int resourceID, std::vector<int> &thread_resources){     // takes in person releasing, and the list of resources they are releasing
+void Release(int playerID, int resourceID){     // takes in person releasing, and the list of resources they are releasing
     // make resource positive first
+    for(int l = 0; l < resourcesInUse.size(); l++){
+        if(resourcesInUse[l] == -players[playerID].numbers[resourceID]){
+            resourcesInUse.erase(resourcesInUse.begin()+l);
+            std::cout << "Player " << players[playerID].name << " released " << players[playerID].numbers[resourceID] << std::endl;
+        }
+    }
 }
 /// End of Release Function
 
 /// Thread function
 void *playerThread(void* z){
     const int threadID = *((int*) z);
-    std::vector<int> thread_resources;
+    //std::vector<int> thread_resources;
     int totalResources = players[threadID].numNumbers;
     int itemVectorPosition = 0;
 
@@ -156,22 +214,26 @@ void *playerThread(void* z){
 
         // Determine whether next item is requesting or releasing a resource
         if(players[threadID].numbers[itemVectorPosition] > 0){  // REQUEST
-            bool granted = Request(threadID, itemVectorPosition, thread_resources);
-            pthread_mutex_unlock(&lock);
+            bool granted = Request(threadID, itemVectorPosition);
+//            pthread_mutex_unlock(&lock);
             if(granted == true){
+                itemVectorPosition++;
+                totalResources -= 1;
                 sleep(1+((std::rand()%100)/100));
             }
             else{
                 sleep((std::rand()%100)/100);
             }
-        }
-        else{       // RELEASE
-            Release(threadID, itemVectorPosition, thread_resources);
             pthread_mutex_unlock(&lock);
         }
-        itemVectorPosition++;
+        else{       // RELEASE
+            Release(threadID, itemVectorPosition);
+            itemVectorPosition++;
+            totalResources -= 1;
+            pthread_mutex_unlock(&lock);
+        }
 
-        totalResources -= 1;
+//        totalResources -= 1;
         std::cout << "Thread " << threadID << " total: " << totalResources << std::endl;
 
 //        pthread_mutex_unlock(&lock);
@@ -181,8 +243,8 @@ void *playerThread(void* z){
 
     sleep(1+((std::rand()%100)/100));           // sleep for (1+q/100) seconds (q is a random number between 0, 99)
 
-    for(int k = 0; k < thread_resources.size(); k++){       // release all the resources that it is still holding
-        Release(threadID, thread_resources[k], thread_resources);
+    for(int k = 0; k < thread_resources[threadID].size(); k++){       // release all the resources that it is still holding
+        Release(threadID, thread_resources[threadID][k]);
     }
     std::cout << "Thread " << threadID << " released everything, delete me"<< std::endl;
     // exit
@@ -225,6 +287,8 @@ int main(int argc, char **argv) {
             temp_player.numbers.push_back(stoi(token));
         }
         players.push_back(temp_player);
+        std::vector<int> newThread;
+        thread_resources.push_back(newThread);
     }
 
     for(int i = 0; i < players.size(); i++){
@@ -236,8 +300,9 @@ int main(int argc, char **argv) {
     }
     std::cout << std::endl;
 
-    // Initialize graph to N vertices
-    graphy.addAttributes(N_in);
+//    // Initialize graph to N vertices
+//    graphy.addAttributes(N_in);
+    graphy.addAttributes(graphSize+N_in);
     /// End of File IO
 
     /// Create a thread for each person
@@ -258,7 +323,7 @@ int main(int argc, char **argv) {
     g.addEdge(0, 1);
     g.addEdge(0, 2);
     g.addEdge(1, 2);
-    g.addEdge(2, 0);
+    //g.addEdge(2, 0);
     g.addEdge(2, 3);
     g.addEdge(3, 3);
 
