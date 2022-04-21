@@ -6,6 +6,10 @@
 
 #IncludeRegexTransform: 
 
+C:/Users/Ashwi/Documents/github/OSThree/dw_graph.h
+vector
+-
+
 C:/Users/Ashwi/Documents/github/OSThree/main.cpp
 iostream
 -
@@ -15,4 +19,6 @@ pthread.h
 -
 unistd.h
 -
+dw_graph.h
+C:/Users/Ashwi/Documents/github/OSThree/dw_graph.h
 

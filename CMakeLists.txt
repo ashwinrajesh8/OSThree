@@ -3,4 +3,4 @@ project(OSThree)
 
 set(CMAKE_CXX_STANDARD 14)
 
-add_executable(OSThree main.cpp inputOne.txt)
+add_executable(OSThree main.cpp inputOne.txt dw_graph.cpp dw_graph.h)

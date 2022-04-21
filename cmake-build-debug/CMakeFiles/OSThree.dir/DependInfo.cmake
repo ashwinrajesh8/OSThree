@@ -4,6 +4,7 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_CXX
+  "C:/Users/Ashwi/Documents/github/OSThree/dw_graph.cpp" "C:/Users/Ashwi/Documents/github/OSThree/cmake-build-debug/CMakeFiles/OSThree.dir/dw_graph.cpp.obj"
   "C:/Users/Ashwi/Documents/github/OSThree/main.cpp" "C:/Users/Ashwi/Documents/github/OSThree/cmake-build-debug/CMakeFiles/OSThree.dir/main.cpp.obj"
   )
 set(CMAKE_CXX_COMPILER_ID "GNU")

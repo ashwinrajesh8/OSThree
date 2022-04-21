@@ -1,4 +1,5 @@
 file(REMOVE_RECURSE
+  "CMakeFiles/OSThree.dir/dw_graph.cpp.obj"
   "CMakeFiles/OSThree.dir/main.cpp.obj"
   "OSThree.exe"
   "OSThree.exe.manifest"

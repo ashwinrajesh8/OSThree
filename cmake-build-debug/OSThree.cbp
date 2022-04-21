@@ -80,6 +80,12 @@
 				</MakeCommands>
 			</Target>
 		</Build>
+		<Unit filename="C:/Users/Ashwi/Documents/github/OSThree/dw_graph.cpp">
+			<Option target="OSThree"/>
+		</Unit>
+		<Unit filename="C:/Users/Ashwi/Documents/github/OSThree/dw_graph.h">
+			<Option target="OSThree"/>
+		</Unit>
 		<Unit filename="C:/Users/Ashwi/Documents/github/OSThree/inputOne.txt">
 			<Option target="OSThree"/>
 		</Unit>

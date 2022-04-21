@@ -122,6 +122,33 @@ OSThree/fast:
 	$(MAKE) -f CMakeFiles\OSThree.dir\build.make CMakeFiles/OSThree.dir/build
 .PHONY : OSThree/fast
 
+dw_graph.obj: dw_graph.cpp.obj
+
+.PHONY : dw_graph.obj
+
+# target to build an object file
+dw_graph.cpp.obj:
+	$(MAKE) -f CMakeFiles\OSThree.dir\build.make CMakeFiles/OSThree.dir/dw_graph.cpp.obj
+.PHONY : dw_graph.cpp.obj
+
+dw_graph.i: dw_graph.cpp.i
+
+.PHONY : dw_graph.i
+
+# target to preprocess a source file
+dw_graph.cpp.i:
+	$(MAKE) -f CMakeFiles\OSThree.dir\build.make CMakeFiles/OSThree.dir/dw_graph.cpp.i
+.PHONY : dw_graph.cpp.i
+
+dw_graph.s: dw_graph.cpp.s
+
+.PHONY : dw_graph.s
+
+# target to generate assembly for a file
+dw_graph.cpp.s:
+	$(MAKE) -f CMakeFiles\OSThree.dir\build.make CMakeFiles/OSThree.dir/dw_graph.cpp.s
+.PHONY : dw_graph.cpp.s
+
 main.obj: main.cpp.obj
 
 .PHONY : main.obj
@@ -158,6 +185,9 @@ help:
 	@echo ... rebuild_cache
 	@echo ... OSThree
 	@echo ... edit_cache
+	@echo ... dw_graph.obj
+	@echo ... dw_graph.i
+	@echo ... dw_graph.s
 	@echo ... main.obj
 	@echo ... main.i
 	@echo ... main.s
