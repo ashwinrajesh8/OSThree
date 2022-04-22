@@ -40,12 +40,10 @@ pthread_mutex_t locker = PTHREAD_MUTEX_INITIALIZER;
 
 /// Graph Printing Functions
 void printClaims(){
-    std::cout << "Threads to Resources: ";
+    std::cout << "Threads to Resources:  ";
     std::set<pair<std::string, int>> print_list;
-    for (int i = k_in+1; i < graphie.get_nodeCount(); i++)
-    {
-        for (auto p : graphie.adjacencyList[i])
-        {
+    for (int i = k_in+1; i < graphie.get_nodeCount(); i++){
+        for (auto p : graphie.adjacencyList[i]){
             print_list.insert(make_pair(players[i-k_in-1].name, p.first));
         }
     }
@@ -56,11 +54,9 @@ void printClaims(){
 }
 
 void printAssignments(){
-    std::cout << "Resources to Threads: ";
-    for (int i = 0; i < graphie.get_nodeCount()-N_in; i++)
-    {
-        for (auto p : graphie.adjacencyList[i])
-        {
+    std::cout << "Resources to Threads:  ";
+    for (int i = 0; i < graphie.get_nodeCount()-N_in; i++){
+        for (auto p : graphie.adjacencyList[i]){
             std::cout << "(" << i << ", " << players[p.first-k_in-1].name << ") ";
         }
     }
@@ -94,10 +90,6 @@ bool Request(int playerID, int resourceID){     // takes in person making reques
     }
     if(is_assigned == true){
         std::cout << "Person " << players[playerID].name << " requests resource " << players[playerID].numbers[resourceID] << ": denied" << std::endl;
-        for(int u = 0; u < resourcesInUse.size(); u++){
-            std::cout << resourcesInUse[u] << " ";
-        }
-        std::cout << std::endl;
         requestStatus = false;
     }
     else {
@@ -194,10 +186,6 @@ void *playerThread(void* z){
                 sleep(1+((std::rand()%100)/100));
             }
             else{
-                // skip
-//                itemVectorPosition++; ////
-//                totalResources -= 1; ////
-                // end skip
                 sleep((std::rand()%100)/100);
             }
             pthread_mutex_unlock(&locker);
@@ -234,8 +222,6 @@ void *playerThread(void* z){
 /// End of thread
 
 int main(int argc, char **argv) {
-    std::cout << "\nTest cmake project execution." << std::endl << std::endl;
-
     /// File IO
     std::string N_string;
     std::string k_string;
