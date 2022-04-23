@@ -9,6 +9,8 @@
 
 /*
  * Ashwin Rajesh, Operating Systems, Program 3
+ * Due 22/04/2022
+ * Graph class source: https://github.com/erenkeskin/directed-weighted-graph/blob/master/src/main.cpp
 */
 
 
@@ -22,9 +24,9 @@ struct player {
 /// end of player struct
 
 /// Global vars
-std::vector<player> players;
+std::vector<player> players;        // vector will store metadata on each player
 DirectedWeightedGraph graphie;
-int graphSize = 0; // assuming individual k does not exceed 100
+int graphSize = 0;      // we set graph size once we parse graph specs
 std::vector<std::vector<int>> thread_resources;
 std::vector<int> resourcesInUse;
 std::vector<std::pair<int, int>> claimTrack;
@@ -72,30 +74,32 @@ void startSignal(){
 /// End of start signal
 
 /// Request Function
-bool Request(int playerID, int resourceID){     // takes in person making request, and resource to be obtained
+bool Request(int playerID, int resourceID){     // takes in person making request, and resource to be obtained, thnen will facilitate the request algorithm
     bool requestStatus;
     int playerNode = graphSize+playerID-N_in;
     DirectedWeightedGraph tempie;
-    tempie = graphie;
+    tempie = graphie;       // tempie will replicate our graph to discover cycles before implemented on graphie
 
     std::cout << "Person " << players[playerID].name << " requests resource " << players[playerID].numbers[resourceID] << std::endl;
     printAssignments();
     printClaims();
 
     bool is_assigned = false;
-    for(int i = 0; i < resourcesInUse.size(); i++){
+    for(int i = 0; i < resourcesInUse.size(); i++){                         // Check whether resource is already in use by another process
         if(resourcesInUse[i] == players[playerID].numbers[resourceID]){
             is_assigned = true;
         }
     }
-    if(is_assigned == true){
+    if(is_assigned == true){        // if resource is being used by another process, deny the request
         std::cout << "Person " << players[playerID].name << " requests resource " << players[playerID].numbers[resourceID] << ": denied" << std::endl;
         requestStatus = false;
     }
     else {
+        // Below we change the edge from a claim edge to an assignment edge
         while(tempie.is_edge(playerNode, players[playerID].numbers[resourceID])){tempie.remove_edge(playerNode, players[playerID].numbers[resourceID]);}
         tempie.add_edge(players[playerID].numbers[resourceID], playerNode, 0);
 
+        // We then check whether this change induces a cycle
         if (!tempie.is_acyclic()) {
             resourcesInUse.push_back(players[playerID].numbers[resourceID]);
             while(graphie.is_edge(playerNode, players[playerID].numbers[resourceID])){graphie.remove_edge(playerNode, players[playerID].numbers[resourceID]);}
@@ -115,7 +119,7 @@ bool Request(int playerID, int resourceID){     // takes in person making reques
 /// End of Request Function
 
 /// Release Function
-void Release(int playerID, int resourceID, int option){     // takes in person releasing, and the list of resources they are releasing
+void Release(int playerID, int resourceID, int option){     // takes in person releasing, and the list of resources they are releasing, and the option (first option is for individual release, second is for group release)
     if(option == 0){
         int playerNode = graphSize+playerID-N_in;
         for(int l = 0; l < resourcesInUse.size(); l++){
@@ -170,6 +174,7 @@ void *playerThread(void* z){
     pthread_mutex_unlock(&locker);        // unlock thread after signal broadcast
 
     while(totalResources > 0){
+        // below will compete with other threads to lock in their processes
         int lockStatus = pthread_mutex_lock(&locker);
         while(lockStatus != 0){
             lockStatus = pthread_mutex_lock(&locker);
@@ -178,7 +183,6 @@ void *playerThread(void* z){
         // Determine whether next item is requesting or releasing a resource
         if(players[threadID].numbers[itemVectorPosition] > 0){  // REQUEST
             bool granted = Request(threadID, itemVectorPosition);
-//            pthread_mutex_unlock(&locker);
             if(granted == true){
                 threadInUse.push_back(itemVectorPosition);
                 itemVectorPosition++;
@@ -195,7 +199,7 @@ void *playerThread(void* z){
             threadInUse.erase(std::remove(threadInUse.begin(), threadInUse.end(), -players[threadID].numbers[itemVectorPosition]), threadInUse.end());
             itemVectorPosition++;
             totalResources -= 1;
-            pthread_mutex_unlock(&locker);
+            pthread_mutex_unlock(&locker);  // unlock and allow other threads to capture
         }
     }
 
@@ -205,7 +209,7 @@ void *playerThread(void* z){
     for(int m = 0; m < numIterations; m++){       // release all the resources that it is still holding
         int min = INT_MAX;
         int min_pos = 0;
-        for(int n = 0; n < threadInUse.size(); n++){
+        for(int n = 0; n < threadInUse.size(); n++){    // used to arrange descending order prescribed in document
             if(players[threadID].numbers[threadInUse[n]] < min){
                 min = players[threadID].numbers[threadInUse[n]];
                 min_pos = n;
@@ -214,6 +218,7 @@ void *playerThread(void* z){
         Release(threadID, threadInUse[min_pos], 1);
         threadInUse.erase(threadInUse.begin()+min_pos);
     }
+    // When releasing all resources, go ahead and print the graphs
     printAssignments();
     printClaims();
     // exit
@@ -242,7 +247,7 @@ int main(int argc, char **argv) {
 
     //std::cout << "N read: " << N_in << " k read: " << k_in << std::endl << std::endl;
     std::string curr_line;
-    for(int i = 0; i < N_in; i++){
+    for(int i = 0; i < N_in; i++){      // iterate through all players
         player temp_player;
         vector<int> currInputGraph;
         getline(input_file, curr_line);
